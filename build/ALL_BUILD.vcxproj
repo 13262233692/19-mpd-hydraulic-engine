@@ -184,6 +184,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{0FD5107F-DBBF-3043-8082-5410C656CAB6}</Project>
       <Name>hydraulic_engine_core</Name>
     </ProjectReference>
+    <ProjectReference Include="D:\SOLO-11\19-mpd-hydraulic-engine\build\test_choke_control.vcxproj">
+      <Project>{1522DBE9-2250-382B-8DEA-537649C87B6A}</Project>
+      <Name>test_choke_control</Name>
+    </ProjectReference>
     <ProjectReference Include="D:\SOLO-11\19-mpd-hydraulic-engine\build\test_fvm.vcxproj">
       <Project>{34A49D55-3934-3853-8FA2-FC444FB8ADEE}</Project>
       <Name>test_fvm</Name>

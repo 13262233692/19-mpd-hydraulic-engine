@@ -1,3 +1,7 @@
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
+
 #include "hydraulic_engine/simulator.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -29,15 +33,21 @@ SimulationConfig::SimulationConfig()
       max_newton_iter(30),
       newton_tol(1e-6),
       adaptive_time_stepping(true),
-      flux_limiter(FluxLimiter::FIRST_ORDER_UPWIND) {}
+      flux_limiter(FluxLimiter::FIRST_ORDER_UPWIND),
+      enable_choke_control(false) {}
 
 Simulator::Simulator(const SimulationConfig& config)
     : config_(config),
       current_time_(0.0),
       current_dt_(config.dt_init),
-      total_steps_(0) {
+      total_steps_(0),
+      enable_choke_control_(config.enable_choke_control) {
     validate_config();
     initialize();
+    
+    if (enable_choke_control_) {
+        choke_controller_ = std::make_unique<ChokeValveController>(config.choke_config);
+    }
 }
 
 void Simulator::validate_config() const {
@@ -278,6 +288,10 @@ bool Simulator::run(double total_time, int output_interval) {
         
         last_residual_prev = last_residual;
         
+        if (enable_choke_control_) {
+            update_choke_control();
+        }
+        
         output_counter++;
         if (output_counter % output_interval == 0 && output_callback_) {
             output_callback_(get_output());
@@ -341,6 +355,64 @@ const SimulationOutput Simulator::get_output() const {
     }
     
     return output;
+}
+
+void Simulator::enable_choke_valve_control(const ChokeValveConfig& choke_config) {
+    enable_choke_control_ = true;
+    choke_controller_ = std::make_unique<ChokeValveController>(choke_config);
+    config_.choke_config = choke_config;
+}
+
+void Simulator::disable_choke_valve_control() {
+    enable_choke_control_ = false;
+    choke_controller_.reset();
+}
+
+void Simulator::set_choke_target_bhp(double target_bhp) {
+    if (choke_controller_) {
+        choke_controller_->set_target_bhp(target_bhp);
+    }
+    config_.choke_config.target_bhp = target_bhp;
+}
+
+void Simulator::update_choke_control() {
+    if (!enable_choke_control_ || !choke_controller_) return;
+    
+    int n = config_.num_cells;
+    if (n < 2) return;
+    
+    double bhp = state_->at(n - 1).pressure;
+    
+    double wellhead_pressure = state_->at(0).pressure;
+    double wellhead_void_fraction = state_->at(0).void_fraction;
+    double wellhead_velocity = state_->at(0).mixture_velocity;
+    
+    double wellbore_area = M_PI * config_.wellbore_diameter * config_.wellbore_diameter / 4.0;
+    double wellhead_flow_rate = std::abs(wellhead_velocity) * wellbore_area;
+    
+    double choke_area = 0.0;
+    double backpressure = 0.0;
+    
+    choke_controller_->update(
+        current_time_,
+        bhp,
+        wellhead_flow_rate,
+        wellhead_void_fraction,
+        wellhead_pressure,
+        choke_area,
+        backpressure
+    );
+    
+    double ambient_pressure = 1e5;
+    bc_.outlet_pressure = ambient_pressure + backpressure;
+}
+
+void Simulator::print_choke_control_report() const {
+    if (choke_controller_) {
+        choke_controller_->print_report();
+    } else {
+        std::cout << "Choke valve control is not enabled." << std::endl;
+    }
 }
 
 }

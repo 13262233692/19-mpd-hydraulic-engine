@@ -5,3 +5,4 @@ D:\SOLO-11\19-mpd-hydraulic-engine\src\cpp\fvm.cpp;D:\SOLO-11\19-mpd-hydraulic-e
 D:\SOLO-11\19-mpd-hydraulic-engine\src\cpp\pentadiagonal_solver.cpp;D:\SOLO-11\19-mpd-hydraulic-engine\build\hydraulic_engine_core.dir\Release\pentadiagonal_solver.obj
 D:\SOLO-11\19-mpd-hydraulic-engine\src\cpp\time_integrator.cpp;D:\SOLO-11\19-mpd-hydraulic-engine\build\hydraulic_engine_core.dir\Release\time_integrator.obj
 D:\SOLO-11\19-mpd-hydraulic-engine\src\cpp\simulator.cpp;D:\SOLO-11\19-mpd-hydraulic-engine\build\hydraulic_engine_core.dir\Release\simulator.obj
+D:\SOLO-11\19-mpd-hydraulic-engine\src\cpp\choke_valve.cpp;D:\SOLO-11\19-mpd-hydraulic-engine\build\hydraulic_engine_core.dir\Release\choke_valve.obj

@@ -10,6 +10,7 @@
 #include "fvm.hpp"
 #include "time_integrator.hpp"
 #include "pentadiagonal_solver.hpp"
+#include "choke_valve.hpp"
 
 namespace hydraulic_engine {
 
@@ -42,6 +43,9 @@ struct SimulationConfig {
     bool adaptive_time_stepping;
     
     FluxLimiter::Type flux_limiter;
+    
+    bool enable_choke_control;
+    ChokeValveConfig choke_config;
     
     SimulationConfig();
 };
@@ -99,6 +103,15 @@ public:
     void set_output_callback(std::function<void(const SimulationOutput&)> callback) {
         output_callback_ = callback;
     }
+    
+    void enable_choke_valve_control(const ChokeValveConfig& choke_config);
+    void disable_choke_valve_control();
+    void set_choke_target_bhp(double target_bhp);
+    
+    bool is_choke_control_enabled() const { return enable_choke_control_; }
+    const ChokeValveController* get_choke_controller() const { return choke_controller_.get(); }
+    
+    void print_choke_control_report() const;
 
 private:
     SimulationConfig config_;
@@ -118,6 +131,11 @@ private:
     
     std::vector<SimulationOutput> output_history_;
     std::function<void(const SimulationOutput&)> output_callback_;
+    
+    bool enable_choke_control_;
+    std::unique_ptr<ChokeValveController> choke_controller_;
+    
+    void update_choke_control();
     
     void setup_default_boundary_conditions();
     void validate_config() const;

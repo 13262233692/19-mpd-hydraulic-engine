@@ -19,6 +19,7 @@ set(HYDRAULIC_ENGINE_SOURCES
     src/cpp/pentadiagonal_solver.cpp
     src/cpp/time_integrator.cpp
     src/cpp/simulator.cpp
+    src/cpp/choke_valve.cpp
 )
 
 add_library(hydraulic_engine_core STATIC ${HYDRAULIC_ENGINE_SOURCES})
@@ -57,3 +58,7 @@ add_test(NAME test_simulator COMMAND test_simulator)
 add_executable(test_kick_stability tests/test_kick_stability.cpp)
 target_link_libraries(test_kick_stability PRIVATE hydraulic_engine_core)
 add_test(NAME test_kick_stability COMMAND test_kick_stability)
+
+add_executable(test_choke_control tests/test_choke_control.cpp)
+target_link_libraries(test_choke_control PRIVATE hydraulic_engine_core)
+add_test(NAME test_choke_control COMMAND test_choke_control)

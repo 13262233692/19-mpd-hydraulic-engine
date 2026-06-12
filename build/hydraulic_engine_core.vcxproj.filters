@@ -22,6 +22,9 @@
     <ClCompile Include="D:\SOLO-11\19-mpd-hydraulic-engine\src\cpp\simulator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="D:\SOLO-11\19-mpd-hydraulic-engine\src\cpp\choke_valve.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="D:\SOLO-11\19-mpd-hydraulic-engine\CMakeLists.txt" />
