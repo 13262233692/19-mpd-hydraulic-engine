@@ -3,6 +3,7 @@ D:/SOLO-11/19-mpd-hydraulic-engine/build/CMakeFiles/hydraulic_engine.dir
 D:/SOLO-11/19-mpd-hydraulic-engine/build/CMakeFiles/test_solver.dir
 D:/SOLO-11/19-mpd-hydraulic-engine/build/CMakeFiles/test_fvm.dir
 D:/SOLO-11/19-mpd-hydraulic-engine/build/CMakeFiles/test_simulator.dir
+D:/SOLO-11/19-mpd-hydraulic-engine/build/CMakeFiles/test_kick_stability.dir
 D:/SOLO-11/19-mpd-hydraulic-engine/build/CMakeFiles/RUN_TESTS.dir
 D:/SOLO-11/19-mpd-hydraulic-engine/build/CMakeFiles/ALL_BUILD.dir
 D:/SOLO-11/19-mpd-hydraulic-engine/build/CMakeFiles/ZERO_CHECK.dir

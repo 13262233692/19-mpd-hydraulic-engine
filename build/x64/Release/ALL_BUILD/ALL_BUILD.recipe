@@ -11,6 +11,9 @@
       <FullPath>D:\SOLO-11\19-mpd-hydraulic-engine\build\Release\test_fvm.exe</FullPath>
     </ProjectOutput>
     <ProjectOutput>
+      <FullPath>D:\SOLO-11\19-mpd-hydraulic-engine\build\Release\test_kick_stability.exe</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
       <FullPath>D:\SOLO-11\19-mpd-hydraulic-engine\build\Release\test_simulator.exe</FullPath>
     </ProjectOutput>
     <ProjectOutput>

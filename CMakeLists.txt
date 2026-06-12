@@ -53,3 +53,7 @@ add_test(NAME test_fvm COMMAND test_fvm)
 add_executable(test_simulator tests/test_simulator.cpp)
 target_link_libraries(test_simulator PRIVATE hydraulic_engine_core)
 add_test(NAME test_simulator COMMAND test_simulator)
+
+add_executable(test_kick_stability tests/test_kick_stability.cpp)
+target_link_libraries(test_kick_stability PRIVATE hydraulic_engine_core)
+add_test(NAME test_kick_stability COMMAND test_kick_stability)

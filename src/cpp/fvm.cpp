@@ -18,16 +18,28 @@ double FVMDisc::minmod(double a, double b) const {
     return std::abs(a) < std::abs(b) ? a : b;
 }
 
-double FVMDisc::superbee(double r) const {
-    if (r <= 0.0) return 0.0;
-    if (r <= 0.5) return 2.0 * r;
-    if (r <= 1.0) return 1.0;
-    return std::min(2.0, std::min(2.0 * r, (1.0 + r) / 2.0));
+double FVMDisc::minmod3(double a, double b, double c) const {
+    if (a * b <= 0.0 || a * c <= 0.0) return 0.0;
+    double sign = (a > 0.0) ? 1.0 : -1.0;
+    return sign * std::min({std::abs(a), std::abs(b), std::abs(c)});
 }
 
-double FVMDisc::van_leer(double r) const {
+double FVMDisc::flux_limiter(double r, FluxLimiter::Type type) const {
     if (r <= 0.0) return 0.0;
-    return 2.0 * r / (1.0 + r);
+    
+    switch (type) {
+        case FluxLimiter::MINMOD:
+            return std::min(1.0, r);
+        case FluxLimiter::SUPERBEE:
+            return std::max(0.0, std::max(std::min(2.0 * r, 1.0), std::min(r, 2.0)));
+        case FluxLimiter::VAN_LEER:
+            return (r + std::abs(r)) / (1.0 + std::abs(r));
+        case FluxLimiter::VAN_ALBADA:
+            return (r * r + r) / (r * r + 1.0);
+        case FluxLimiter::FIRST_ORDER_UPWIND:
+        default:
+            return 0.0;
+    }
 }
 
 void FVMDisc::first_order_upwind(const PrimitiveVariables& left,
@@ -42,17 +54,24 @@ void FVMDisc::first_order_upwind(const PrimitiveVariables& left,
     double face_velocity = 0.5 * (velocity_left + velocity_right);
     
     const PrimitiveVariables& upwind = face_velocity >= 0.0 ? left : right;
+    const PrimitiveVariables& downwind = face_velocity >= 0.0 ? right : left;
     
-    double rho_m = upwind.mixture_density;
-    double alpha_g = upwind.void_fraction;
-    double rho_g = upwind.gas_density;
-    double vm = face_velocity;
+    double vm_upwind = upwind.mixture_velocity;
+    double rho_m_upwind = upwind.mixture_density;
+    double alpha_g_upwind = upwind.void_fraction;
+    double rho_g_upwind = upwind.gas_density;
+    double vg_upwind = upwind.gas_velocity;
     
-    mass_flux_mixture = rho_m * vm * face_area;
-    mass_flux_gas = alpha_g * rho_g * upwind.gas_velocity * face_area;
+    double pressure_upwind = upwind.pressure;
+    double pressure_downwind = downwind.pressure;
     
-    double pressure_central = 0.5 * (left.pressure + right.pressure);
-    momentum_flux = (rho_m * vm * vm + pressure_central) * face_area;
+    double pressure_face = 0.5 * (pressure_upwind + pressure_downwind);
+    
+    mass_flux_mixture = rho_m_upwind * vm_upwind * face_area;
+    mass_flux_gas = alpha_g_upwind * rho_g_upwind * vg_upwind * face_area;
+    
+    double momentum_conv = rho_m_upwind * vm_upwind * vm_upwind;
+    momentum_flux = (momentum_conv + pressure_face) * face_area;
 }
 
 void FVMDisc::muscl_reconstruction(const FieldState& state,
@@ -83,35 +102,98 @@ void FVMDisc::muscl_reconstruction(const FieldState& state,
     const auto& var_ip1 = state.at(ip1);
     const auto& var_ip2 = state.at(ip2);
     
-    auto reconstruct = [&](double vm1, double vi, double vp1, double vp2) -> double {
-        double delta_left = vi - vm1;
-        double delta_right = vp1 - vi;
-        double slope_i = minmod(delta_right, delta_left);
+    auto reconstruct_left = [&](double vm1, double vi, double vp1) -> double {
+        double delta_down = vp1 - vi;
+        double delta_up = vi - vm1;
         
-        double delta_left_p1 = vp1 - vi;
-        double delta_right_p1 = vp2 - vp1;
-        double slope_ip1 = minmod(delta_right_p1, delta_left_p1);
+        double slope = minmod(delta_down, delta_up);
         
-        double left_val = vi + 0.5 * slope_i;
-        double right_val = vp1 - 0.5 * slope_ip1;
+        return vi + 0.5 * slope;
+    };
+    
+    auto reconstruct_right = [&](double vi, double vp1, double vp2) -> double {
+        double delta_down = vp2 - vp1;
+        double delta_up = vp1 - vi;
         
-        return (vi + vp1) / 2.0;
+        double slope = minmod(delta_down, delta_up);
+        
+        return vp1 - 0.5 * slope;
+    };
+    
+    auto reconstruct_with_limiter = [&](double vm1, double vi, double vp1, double vp2,
+                                        bool is_left) -> double {
+        if (limiter_type_ == FluxLimiter::FIRST_ORDER_UPWIND) {
+            return is_left ? vi : vp1;
+        }
+        
+        double delta_up, delta_down;
+        if (is_left) {
+            delta_up = vi - vm1;
+            delta_down = vp1 - vi;
+        } else {
+            delta_up = vp1 - vi;
+            delta_down = vp2 - vp1;
+        }
+        
+        if (std::abs(delta_up) < 1e-12) {
+            return is_left ? vi : vp1;
+        }
+        
+        double r = delta_down / delta_up;
+        double phi = flux_limiter(r, limiter_type_);
+        
+        if (is_left) {
+            return vi + 0.5 * phi * delta_up;
+        } else {
+            return vp1 - 0.5 * phi * delta_up;
+        }
     };
     
     left = var_i;
     right = var_ip1;
     
-    left.pressure = reconstruct(var_im1.pressure, var_i.pressure, var_ip1.pressure, var_ip2.pressure);
-    right.pressure = reconstruct(var_i.pressure, var_ip1.pressure, var_ip2.pressure, var_ip2.pressure);
+    left.pressure = reconstruct_with_limiter(
+        var_im1.pressure, var_i.pressure, var_ip1.pressure, var_ip2.pressure, true);
+    right.pressure = reconstruct_with_limiter(
+        var_i.pressure, var_ip1.pressure, var_ip2.pressure, var_ip2.pressure, false);
     
-    left.mixture_density = reconstruct(var_im1.mixture_density, var_i.mixture_density, var_ip1.mixture_density, var_ip2.mixture_density);
-    right.mixture_density = reconstruct(var_i.mixture_density, var_ip1.mixture_density, var_ip2.mixture_density, var_ip2.mixture_density);
+    left.mixture_density = reconstruct_with_limiter(
+        var_im1.mixture_density, var_i.mixture_density, var_ip1.mixture_density, var_ip2.mixture_density, true);
+    right.mixture_density = reconstruct_with_limiter(
+        var_i.mixture_density, var_ip1.mixture_density, var_ip2.mixture_density, var_ip2.mixture_density, false);
     
-    left.void_fraction = reconstruct(var_im1.void_fraction, var_i.void_fraction, var_ip1.void_fraction, var_ip2.void_fraction);
-    right.void_fraction = reconstruct(var_i.void_fraction, var_ip1.void_fraction, var_ip2.void_fraction, var_ip2.void_fraction);
+    left.void_fraction = reconstruct_with_limiter(
+        var_im1.void_fraction, var_i.void_fraction, var_ip1.void_fraction, var_ip2.void_fraction, true);
+    right.void_fraction = reconstruct_with_limiter(
+        var_i.void_fraction, var_ip1.void_fraction, var_ip2.void_fraction, var_ip2.void_fraction, false);
     
     left.void_fraction = std::max(0.0, std::min(0.999, left.void_fraction));
     right.void_fraction = std::max(0.0, std::min(0.999, right.void_fraction));
+    
+    left.mixture_velocity = reconstruct_with_limiter(
+        var_im1.mixture_velocity, var_i.mixture_velocity, var_ip1.mixture_velocity, var_ip2.mixture_velocity, true);
+    right.mixture_velocity = reconstruct_with_limiter(
+        var_i.mixture_velocity, var_ip1.mixture_velocity, var_ip2.mixture_velocity, var_ip2.mixture_velocity, false);
+    
+    left.gas_velocity = reconstruct_with_limiter(
+        var_im1.gas_velocity, var_i.gas_velocity, var_ip1.gas_velocity, var_ip2.gas_velocity, true);
+    right.gas_velocity = reconstruct_with_limiter(
+        var_i.gas_velocity, var_ip1.gas_velocity, var_ip2.gas_velocity, var_ip2.gas_velocity, false);
+    
+    left.gas_density = reconstruct_with_limiter(
+        var_im1.gas_density, var_i.gas_density, var_ip1.gas_density, var_ip2.gas_density, true);
+    right.gas_density = reconstruct_with_limiter(
+        var_i.gas_density, var_ip1.gas_density, var_ip2.gas_density, var_ip2.gas_density, false);
+    
+    left.liquid_density = reconstruct_with_limiter(
+        var_im1.liquid_density, var_i.liquid_density, var_ip1.liquid_density, var_ip2.liquid_density, true);
+    right.liquid_density = reconstruct_with_limiter(
+        var_i.liquid_density, var_ip1.liquid_density, var_ip2.liquid_density, var_ip2.liquid_density, false);
+    
+    left.temperature = reconstruct_with_limiter(
+        var_im1.temperature, var_i.temperature, var_ip1.temperature, var_ip2.temperature, true);
+    right.temperature = reconstruct_with_limiter(
+        var_i.temperature, var_ip1.temperature, var_ip2.temperature, var_ip2.temperature, false);
 }
 
 void FVMDisc::compute_face_fluxes(const FieldState& state,

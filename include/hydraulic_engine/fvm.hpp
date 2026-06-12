@@ -15,9 +15,12 @@ namespace hydraulic_engine {
 struct FluxLimiter {
     enum Type {
         FIRST_ORDER_UPWIND = 0,
+        MINMOD,
+        SUPERBEE,
+        VAN_LEER,
+        VAN_ALBADA,
         MUSCL,
-        QUICK,
-        SUPERBEE
+        QUICK
     };
 };
 
@@ -82,8 +85,8 @@ private:
     static constexpr double eps_ = 1e-12;
     
     double minmod(double a, double b) const;
-    double superbee(double r) const;
-    double van_leer(double r) const;
+    double minmod3(double a, double b, double c) const;
+    double flux_limiter(double r, FluxLimiter::Type type) const;
     
     void apply_kick_source(FieldState& residuals,
                            const FieldState& state,

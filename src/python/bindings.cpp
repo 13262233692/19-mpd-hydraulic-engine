@@ -19,9 +19,12 @@ PYBIND11_MODULE(hydraulic_engine, m) {
     
     py::enum_<FluxLimiter::Type>(m, "FluxLimiter")
         .value("FIRST_ORDER_UPWIND", FluxLimiter::FIRST_ORDER_UPWIND)
+        .value("MINMOD", FluxLimiter::MINMOD)
+        .value("SUPERBEE", FluxLimiter::SUPERBEE)
+        .value("VAN_LEER", FluxLimiter::VAN_LEER)
+        .value("VAN_ALBADA", FluxLimiter::VAN_ALBADA)
         .value("MUSCL", FluxLimiter::MUSCL)
-        .value("QUICK", FluxLimiter::QUICK)
-        .value("SUPERBEE", FluxLimiter::SUPERBEE);
+        .value("QUICK", FluxLimiter::QUICK);
     
     py::enum_<TimeIntegrator::Scheme>(m, "TimeScheme")
         .value("EULER_EXPLICIT", TimeIntegrator::Scheme::EULER_EXPLICIT)

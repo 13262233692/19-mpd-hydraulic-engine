@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\SOLO-11\19-mpd-hydraulic-engine\tests\test_kick_stability.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\SOLO-11\19-mpd-hydraulic-engine\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{5CB16919-9598-3F69-978B-C496BE339AD4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

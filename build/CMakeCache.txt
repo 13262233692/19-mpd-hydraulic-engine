@@ -183,7 +183,7 @@ hydraulic_engine_IS_TOP_LEVEL:STATIC=ON
 hydraulic_engine_SOURCE_DIR:STATIC=D:/SOLO-11/19-mpd-hydraulic-engine
 
 //No help, variable specified on the command line.
-pybind11_DIR:UNINITIALIZED=C:/Users/ZhuanZ/AppData/Local/Programs/Python/Python312/Lib/site-packages/pybind11/share/cmake/pybind11
+pybind11_DIR:UNINITIALIZED=C:\Users\ZhuanZ\AppData\Local\Programs\Python\Python312\Lib\site-packages\pybind11\share\cmake\pybind11
 
 
 ########################
