@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\SOLO-11\19-mpd-hydraulic-engine\build\CMakeFiles\97fafe9cf4ee2544a59e39d4d2ee3a64\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{4BD5BA1E-135D-38A8-96E4-8C72B70C7C98}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

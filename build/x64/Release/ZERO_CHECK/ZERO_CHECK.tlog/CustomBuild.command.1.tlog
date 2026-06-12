@@ -1,0 +1,10 @@
+^D:\SOLO-11\19-MPD-HYDRAULIC-ENGINE\BUILD\CMAKEFILES\97FAFE9CF4EE2544A59E39D4D2EE3A64\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/SOLO-11/19-mpd-hydraulic-engine -BD:/SOLO-11/19-mpd-hydraulic-engine/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/SOLO-11/19-mpd-hydraulic-engine/build/hydraulic_engine.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
